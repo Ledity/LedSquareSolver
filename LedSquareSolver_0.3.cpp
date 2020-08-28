@@ -74,8 +74,10 @@ void input (double* a, double* b, double* c)
 		{
 			printf ("\n # Неправильный ввод."
 				"\n # Пожалуйста, введите числовые значения: ");
+
 			fflush(stdin);	
-			scanf("%lg %lg %lg", a, b, c);
+
+			checkInput = scanf("%lg %lg %lg", a, b, c);
 		}
 	}
 }
