@@ -1,11 +1,13 @@
 #include <stdio.h>
 #include <math.h>
 #include <assert.h>
+
+const int ZERO_ROOTS = 0;
 const int SS_INF_ROOTS = -1;
 
 void input (double* a, double* b, double* c);
 
-int solveSquare(double a, double  b, double c,
+int solveSquare (double a, double  b, double c,
 		double* x1, double* x2);
 
 
@@ -21,22 +23,22 @@ int solveSquare(double a, double  b, double c,
 
 int main() 
 {
-	printf("# LedSquareSolver\n"
-			"# Программа для решения кв. уравнений\n"
-			"# (c) Ledity, 2020\n\n");
-
-	printf("# Решение уравнения вида ax^2 + bx + c = 0\n"
-			"# Введите a, b, c: ");
+	printf (" # LedSquareSolver\n"
+	        " # Программа для решения кв. уравнений\n"
+	        " # (c) Ledity, 2020\n\n"
+		
+		" # Решение уравнения вида ax^2 + bx + c = 0\n"
+	        " # Введите a, b, c: ");
 
 	double a = -1.7E308, b = -1.7E308, c = -1.7E308;
-	input(&a, &b, &c);
+	input (&a, &b, &c);
 
 	double x1 = 0, x2 = 0;
 	int nRoots = solveSquare(a, b, c, &x1, &x2);
 
 	switch (nRoots)
 	{
-		case 0:
+		case ZERO_ROOTS:
 			printf("\nНет корней.\n");
 			break;
 		case 1:
@@ -49,25 +51,31 @@ int main()
 			printf("\nКорень - любое число.\n");
 			break;
 		default:
-			printf("\nmain(): ERROR: nRoots = %d\n",	nRoots);
+			printf("\nmain(): ERROR: nRoots = %d\n", nRoots);
 			return 1;
 	}
 }
 
+
+
 void input (double* a, double* b, double* c)
 {
-	assert(a != NULL);
-	assert(b != NULL);
-	assert(c != NULL);
-	assert(a != b);
-	assert(a != c);
-	scanf("%lg %lg %lg", &*a, &*b, &*c);
-	if (*a == -1.7E308 && *b == -1.7E308 && *c == -1.7E308)
+	assert (a != NULL);
+	assert (b != NULL);
+	assert (c != NULL);
+	assert (a != b);
+	assert (a != c);
+
+	int checkInput = scanf("%lg %lg %lg", a, b, c);
+	
+	if (checkInput < 3)
 	{
-		while (*a == -1.7E308 && *b == -1.7E308 && *c == -1.7E308)
+		while (checkInput < 3) 
 		{
-			printf("\n# Ошибка ввода. Введите снова ");
-			scanf("%lg %lg %lg", &*a, &*b, &*c);
+			printf ("\n # Неправильный ввод."
+				"\n # Пожалуйста, введите числовые значения: ");
+			fflush(stdin);	
+			scanf("%lg %lg %lg", a, b, c);
 		}
 	}
 }
@@ -83,16 +91,16 @@ void input (double* a, double* b, double* c)
  *	Use &x1 and &x2 in input to let int solveSquare сhange your x1 and x2 variables.
  */
 
-int solveSquare(double a, double  b, double c,
+int solveSquare (double a, double  b, double c,
 		double* x1, double* x2)
 {
-	assert(std::isfinite (a));
-	assert(std::isfinite (b));
-	assert(std::isfinite (c));
+	assert (std::isfinite (a));
+	assert (std::isfinite (b));
+	assert (std::isfinite (c));
 
-	assert(x1 != NULL);
-	assert(x2 != NULL);
-	assert(x1 != x2);
+	assert (x1 != NULL);
+	assert (x2 != NULL);
+	assert (x1 != x2);
 
 	if (a == 0 && b == 0)
 	{
@@ -102,7 +110,7 @@ int solveSquare(double a, double  b, double c,
 		}
 		else
 		{
-			return 0;
+			return ZERO_ROOTS;
 		}
 	}
 	else
@@ -122,12 +130,7 @@ int solveSquare(double a, double  b, double c,
 		}
 		else
 		{
-			return 0;
+			return ZERO_ROOTS;
 		}
 	}
-	}
-
-
-
-
-
+}
