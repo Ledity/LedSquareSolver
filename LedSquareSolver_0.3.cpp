@@ -7,6 +7,8 @@ const int SS_INF_ROOTS = -1;
 
 void input (double* a, double* b, double* c);
 
+void clean_stdin ();
+
 int solveSquare (double a, double  b, double c,
 		double* x1, double* x2);
 
@@ -39,19 +41,19 @@ int main()
 	switch (nRoots)
 	{
 		case ZERO_ROOTS:
-			printf("\nНет корней.\n");
+			printf("\n Нет корней.\n");
 			break;
 		case 1:
-			printf("\nx = %+lg\n", x1);
+			printf("\n x = %+lg\n", x1);
 			break;
 		case 2:
-			printf("\nx1 = %+lg,  x2 = %+lg\n", x1, x2);
+			printf("\n x1 = %+lg,  x2 = %+lg\n", x1, x2);
 			break;
 		case SS_INF_ROOTS:
-			printf("\nКорень - любое число.\n");
+			printf("\n Корень - любое число.\n");
 			break;
 		default:
-			printf("\nmain(): ERROR: nRoots = %d\n", nRoots);
+			printf("\n main(): ERROR: nRoots = %d\n", nRoots);
 			return 1;
 	}
 }
@@ -75,12 +77,25 @@ void input (double* a, double* b, double* c)
 			printf ("\n # Неправильный ввод."
 				"\n # Пожалуйста, введите числовые значения: ");
 
-			fflush(stdin);	
+			clean_stdin();	
 
 			checkInput = scanf("%lg %lg %lg", a, b, c);
 		}
 	}
 }
+
+
+
+void clean_stdin ()
+{
+	int stdin_char = 1;
+	while (stdin_char != '\n' && stdin_char != EOF)
+	{
+		stdin_char = getchar();
+	}
+}
+
+
 
 /**
  * \brief This function solves square equations
