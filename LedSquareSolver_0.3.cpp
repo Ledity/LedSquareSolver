@@ -167,15 +167,24 @@ int solve_square (double a, double  b, double c,
 	assert (x2 != NULL);
 	assert (x1 != x2);
 
-	if (a == 0 && b == 0)
+	if (a == 0)
 	{
-		if (c == 0) 
+		if (b == 0)
 		{
-			return INF_ROOTS;
+			if (c == 0) 
+			{
+				return INF_ROOTS;
+			}
+			else
+			{
+				return NO_ROOTS;
+			};
 		}
 		else
 		{
-			return NO_ROOTS;
+			*x1 = -c / b;
+
+			return ONE_ROOT;
 		}
 	}
 	else
@@ -238,6 +247,12 @@ void unittest_SOLVE_SQUARE ()
 	check_and_report_SOLVE_SQUARE (aTest = 1.0, bTest = 2.0, cTest = 3.0,
 				       CHECK_X1_FALSE, CHECK_X2_FALSE,
 				       NO_ROOTS, x1Test = 0.0, x2Test = 0.0);
+
+	// Test #5. a = 0, b = 2, c = 6
+
+	check_and_report_SOLVE_SQUARE (aTest = 0.0, bTest = 2.0, cTest = 6.0,
+				       CHECK_X1_TRUE, CHECK_X2_FALSE,
+				       ONE_ROOT, x1Test = -3.0, x2Test = 0.0);
 
 	printf("\n # Testing 'int solve_square ()' complete.\n\n");
 }
