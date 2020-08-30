@@ -4,22 +4,38 @@
 
 //----------------------------------------------------
 
-const int ZERO_ROOTS = 0;
+const int NO_ROOTS = 0;
+const int ONE_ROOT = 1;
+const int TWO_ROOTS = 2;
 const int INF_ROOTS = -1;
+
+const bool CHECK_X1_TRUE = true;
+const bool CHECK_X2_TRUE = true;
+const bool CHECK_X1_FALSE = false;
+const bool CHECK_X2_FALSE = false;
+
+const double PRECISION = 1E-30;
 
 //----------------------------------------------------
 
-void input (double* a, double* b, double* c);
+void input (double* a, double* b, double* c, int* nAttempts);
 
 void clean_stdin ();
 
-int solveSquare (double a, double  b, double c,
+int solve_square (double a, double  b, double c,
 		double* x1, double* x2);
+
+bool is_zero (double input);
 
 //----------------------unittest----------------------
 
-void unittest_solveSquare ();
+void unittest_SOLVE_SQUARE ();
 
+void check_and_report_SOLVE_SQUARE (double aTest, double bTest, double cTest,
+				   bool ifX1Check, bool ifX2Check,
+				   int rightFuncOut, double rightX1, double rightX);
+
+void unittest_IS_ZERO ();
 
 
 //----------------------int main----------------------
@@ -35,7 +51,8 @@ void unittest_solveSquare ();
 
 int main() 
 {
-	unittest_solveSquare ();
+	unittest_SOLVE_SQUARE ();
+	unittest_IS_ZERO ();
 	printf (" # LedSquareSolver\n"
 	        " # Программа для решения кв. уравнений\n"
 	        " # (c) Ledity, 2020\n\n"
@@ -43,59 +60,79 @@ int main()
 		" # Решение уравнения вида ax^2 + bx + c = 0\n"
 	        " # Введите a, b, c: ");
 
-	double a, b, c;
-	input (&a, &b, &c);
+	double a = 666.13, b = 666.13, c = 666.13;
+	int nAttempts = 0;
 
-	double x1 = 0, x2 = 0;
-	int nRoots = solveSquare(a, b, c, &x1, &x2);
+	input (&a, &b, &c, &nAttempts);
 
-	switch (nRoots)
+	double x1 = 0.0, x2 = 0.0;
+	int nRoots = solve_square(a, b, c, &x1, &x2);
+
+	if (nAttempts < 5) {
+		switch (nRoots)
+		{
+			case NO_ROOTS:
+				printf("\n Нет корней.");
+				break;
+			case 1:
+				printf("\n x = %lg", x1);
+				break;
+			case 2:
+				printf("\n x1 = %lg,  x2 = %lg", x1, x2);
+				break;
+			case INF_ROOTS:
+				printf("\n Корень - любое число.");
+				break;
+			default:
+				printf("\n #  main(): ERROR: nRoots = %d", nRoots);
+				return 1;
+		}
+	}
+	else
 	{
-		case ZERO_ROOTS:
-			printf("\n Нет корней.\n");
-			break;
-		case 1:
-			printf("\n x = %+lg\n", x1);
-			break;
-		case 2:
-			printf("\n x1 = %+lg,  x2 = %+lg\n", x1, x2);
-			break;
-		case INF_ROOTS:
-			printf("\n Корень - любое число.\n");
-			break;
-		default:
-			printf("\n main(): ERROR: nRoots = %d\n", nRoots);
-			return 1;
+		printf ("\n # Ошибка ввода. 5 неудачных вводов. Завершение программы");
 	}
 }
 
-//----------------------------------------------------
+//-----------------------input------------------------
 
-void input (double* a, double* b, double* c)
+void input (double* a, double* b, double* c,
+	    int* nAttempts)
 {
 	assert (a != NULL);
 	assert (b != NULL);
 	assert (c != NULL);
+	assert (nAttempts != NULL);
+
 	assert (a != b);
 	assert (a != c);
+	assert (b != c);
 
 	int checkInput = scanf("%lg %lg %lg", a, b, c);
 	
+	*nAttempts = 0;
+	
 	if (checkInput < 3)
 	{
-		while (checkInput < 3) 
+		*nAttempts = 1;
+
+		while (checkInput < 3 && *nAttempts < 5) 
 		{
-			printf ("\n # Неправильный ввод."
-				"\n # Пожалуйста, введите числовые значения: ");
+
+			printf ("\n # Неправильный ввод. Осталось попыток: %d."
+				"\n # Пожалуйста, введите числовые значения: ",
+				5 - *nAttempts);
 
 			clean_stdin();	
 
 			checkInput = scanf("%lg %lg %lg", a, b, c);
+
+			*nAttempts = 1 + *nAttempts;
 		}
 	}
 }
 
-//----------------------------------------------------
+//--------------------clean_stdin---------------------
 
 void clean_stdin ()
 {
@@ -106,7 +143,7 @@ void clean_stdin ()
 	}
 }
 
-//----------------------------------------------------
+//--------------------solve_square--------------------
 
 /**
  * \brief This function solves square equations
@@ -116,10 +153,10 @@ void clean_stdin ()
  *
  *	This function recieves a, b and c coefficents of square equation and links to x1 and x2 variables of another function (such as int main), that will be transformed into sqruare roots.
  *	The function itself outputs number of roots, where INFROOTS means infinite number of roots.
- *	Use &x1 and &x2 in input to let int solveSquare сhange your x1 and x2 variables.
+ *	Use &x1 and &x2 in input to let int solve_square сhange your x1 and x2 variables.
  */
 
-int solveSquare (double a, double  b, double c,
+int solve_square (double a, double  b, double c,
 		double* x1, double* x2)
 {
 	assert (std::isfinite (a));
@@ -138,143 +175,157 @@ int solveSquare (double a, double  b, double c,
 		}
 		else
 		{
-			return ZERO_ROOTS;
+			return NO_ROOTS;
 		}
 	}
 	else
 	{
 		double discr = b * b  - 4 * a * c;
 
-		if (discr == 0)
+		if (is_zero (discr))
 		{
 			*x1 = -b / 2 / a;
-			return 1;
+			return ONE_ROOT;
 		}
-       		else if (discr > 0)
+       		else if (discr > 0 && !is_zero (discr))
 		{
 			*x1 = (-b + sqrt(discr)) / 2 / a;
 			*x2 = -b / a - *x1;
-			return 2;
+			return TWO_ROOTS;
 		}
 		else
 		{
-			return ZERO_ROOTS;
+			return NO_ROOTS;
 		}
 	}
 }
 
 //----------------------unittest----------------------
 
-void unittest_solveSquare ()
+void unittest_SOLVE_SQUARE ()
 {
-	printf (" # Testing 'int solveSquare ()'.\n");
-	int nPassedTests = 0, nTests = 0;
+	printf (" # Testing 'int solve_square ()'.\n");
 
-	int test_a, test_b, test_c;
-
-	double test_x1, test_x2;
-	int    test_func_out;
+	double aTest = 0.0, bTest = 0.0, cTest = 0.0;
+	double x1Test = 0.0, x2Test = 0.0;
 
 	// Test #1. a = 1, b = -2, c = 1.
 	
-	nTests++;
-
-	test_a = 1;
-	test_b = -2;
-	test_c = 1;
-
-	if (test_func_out = solveSquare (test_a, test_b, test_c, &test_x1, &test_x2) == 1
-	    && test_x1 ==1)
-	{
-		nPassedTests++;
-	}
-	else
-	{
-		printf ("\n # UNITTEST ERROR: 'int solveSquare ()' test #%d failed.\n"
-			  "	input: a = %lg, b = %lg, c = %lg.\n"
-			  "	output: x1 = %lg, function out = %lg.\n",
-			nTests, test_a, test_b, test_c, test_x1, test_func_out);
-	};
+	check_and_report_SOLVE_SQUARE (aTest = 1.0, bTest = -2.0, cTest = 1.0,
+				       CHECK_X1_TRUE, CHECK_X2_FALSE,
+				       ONE_ROOT, x1Test = 1.0, x2Test = 0.0);
 
 	// Test #2. a = 1, b = 3, c = 2
-	
-	nTests++;
 
-	test_a = 1;
-	test_b = 3;
-	test_c = 2;
-
-	if (test_func_out = solveSquare (test_a, test_b, test_c, &test_x1, &test_x2) == 2
-	    && (test_x1 == -1 && test_x2 == -2 || test_x1 == -2 && test_x1 == -1))
-	{
-		nPassedTests++;
-	}
-	else
-	{
-		printf ("\n # UNITTEST ERROR: 'int solveSquare ()' test #%d failed.\n"
-			  "	input: a = %lg, b = %lg, c = %lg.\n"
-			  "	output: x1 = %lg, x2 = %lg, function out = %lg.\n",
-			nTests, test_a, test_b, test_c, test_x1, test_x2, test_func_out);
-	};
+	check_and_report_SOLVE_SQUARE (aTest = 1.0, bTest = 3.0, cTest = 2.0,
+				       CHECK_X1_TRUE, CHECK_X2_TRUE,
+				       TWO_ROOTS, x1Test = -1.0, x2Test = -2.0);
 	
 	// Test #3. a = 0, b = 0, c = 0
-	
-	nTests++;
 
-	test_a = 0;
-	test_b = 0;
-	test_c = 0;
-
-	if (test_func_out = solveSquare (test_a, test_b, test_c, &test_x1, &test_x2) == ZERO_ROOTS)
-	{
-		nPassedTests++;
-	}
-	else
-	{
-		printf ("\n # UNITTEST ERROR: 'int solveSquare ()' test #%d failed.\n"
-			  "	input: a = %lg, b = %lg, c = %lg.\n"
-			  "	output: function out = %lg.\n",
-			nTests, test_a, test_b, test_c, test_func_out);
-	};
+	check_and_report_SOLVE_SQUARE (aTest = 0.0, bTest = 0.0, cTest = 0.0,
+				       CHECK_X1_FALSE, CHECK_X2_FALSE,
+				       INF_ROOTS, x1Test = 0.0, x2Test = 0.0);
 
 	// Test #4. a = 0, b = 0, c = 2
-	
-	nTests++;
 
-	test_a = 0;
-	test_b = 0;
-	test_c = 2;
-
-	if (test_func_out = solveSquare (test_a, test_b, test_c, &test_x1, &test_x2) == INF_ROOTS)
-	{
-		nPassedTests++;
-	}
-	else
-	{
-		printf ("\n # UNITTEST ERROR: 'int solveSquare ()' test #%d failed.\n"
-			  "	input: a = %lg, b = %lg, c = %lg\n"
-			  "	output: x1 = %lg, x2 = %lg, function out = %lg.\n",
-			nTests, test_a, test_b, test_c, test_func_out);
-	};
+	check_and_report_SOLVE_SQUARE (aTest = 0.0, bTest = 0.0, cTest = 2.0,
+				       CHECK_X1_FALSE, CHECK_X2_FALSE,
+				       NO_ROOTS, x1Test = 0.0, x2Test = 0.0);
 
 	// Test #5. a = 1, b = 2, c = 3
-	
-	nTests++;
 
-	test_a = 1;
-	test_b = 2;
-	test_c = 3;
+	check_and_report_SOLVE_SQUARE (aTest = 1.0, bTest = 2.0, cTest = 3.0,
+				       CHECK_X1_FALSE, CHECK_X2_FALSE,
+				       NO_ROOTS, x1Test = 0.0, x2Test = 0.0);
 
-	if (test_func_out = solveSquare (test_a, test_b, test_c, &test_x1, &test_x2) == ZERO_ROOTS)
+	printf("\n # Testing 'int solve_square ()' complete.\n\n");
+}
+
+//----------------------unittest----------------------
+
+void check_and_report_SOLVE_SQUARE (double aTest, double bTest, double cTest,
+				   bool ifX1Check, bool ifX2Check,
+				   int rightFuncOut, double rightX1, double rightX2)
+{
+	double x1Test = 0.0, x2Test = 0.0;
+	int    testFuncOut = 0.0;
+
+	if (ifX1Check == true)
 	{
-		nPassedTests++;
+		if (ifX2Check == true)
+		{
+			if ( !(testFuncOut = solve_square (aTest, bTest, cTest, &x1Test, &x2Test) == rightFuncOut && (x1Test == rightX1 && x2Test == rightX2 || x1Test == rightX2 && x2Test == rightX1)) )
+			{
+				printf ("\n # UNITTEST ERROR: 'int solve_square ()' test failed.\n"
+					  "	input: a = %lg, b = %lg, c = %lg.\n"
+					  "	output: x1 = %lg, x2 = %lg, function out = %lg.\n",
+					aTest, bTest, cTest, x1Test, x2Test, testFuncOut);
+			};
+		}
+		else
+		{
+			if ( !(testFuncOut = solve_square (aTest, bTest, cTest, &x1Test, &x2Test) == rightFuncOut
+			    && x1Test == rightX1) )
+			{
+			printf ("\n # UNITTEST ERROR: 'int solve_square ()' test failed.\n"
+				  "	input: a = %lg, b = %lg, c = %lg.\n"
+				  "	output: x1 = %lg, function out = %lg.\n",
+				aTest, bTest, cTest, x1Test, testFuncOut);
+			};
+		};
 	}
 	else
-	{
-		printf ("\n # UNITTEST ERROR: 'int solveSquare ()' test #%d failed.\n"
-			  "	input: a = %lg, b = %lg, c = %lg\n"
-			  "	output: function out = %lg\n",
-			nTests, test_a, test_b, test_c, test_func_out);
+        {
+		if ( !(testFuncOut = solve_square (aTest, bTest, cTest, &x1Test, &x2Test) == rightFuncOut) )
+		{
+			printf ("\n # UNITTEST ERROR: 'int solve_square ()' test failed.\n"
+				  "	input: a = %lg, b = %lg, c = %lg\n"
+				  "	output: x1 = %lg, x2 = %lg, function out = %lg.\n",
+				aTest, bTest, cTest, testFuncOut);
+		};	
 	};
-	printf("\n # Testing 'int solveSquare ()' complete. %d successuful, %d failed.\n\n", nPassedTests, nTests-nPassedTests);
+}
+
+//----------------------is_zero-----------------------
+
+bool is_zero (double value)
+{
+	return (abs (value) <= PRECISION);
+}
+
+//----------------------unittest----------------------
+
+void unittest_IS_ZERO ()
+{
+	printf (" # Testing 'bool is_zero ()'.\n");
+
+	bool testFuncOut = 0;
+	double valueTest = 0.0;
+	
+	if ( testFuncOut = is_zero (valueTest = 0.0) != true)
+	{
+		printf ("\n # UNITTEST ERROR: 'bool is_zero ()' test failed.\n"
+				  "	input: value = %lg\n"
+				  "	output: function out %d\n",
+				valueTest, testFuncOut);
+	};
+
+	if ( testFuncOut = is_zero (valueTest = 0.05) != false)
+	{
+		printf ("\n # UNITTEST ERROR: 'bool is_zero ()' test failed.\n"
+				  "	input: value = %lg\n"
+				  "	output: function out %d\n",
+				valueTest, testFuncOut);
+	};
+
+	if ( testFuncOut = is_zero (valueTest = PRECISION) != true)
+	{
+		printf ("\n # UNITTEST ERROR: 'bool is_zero ()' test failed.\n"
+				  "	input: value = %lg\n"
+				  "	output: function out %d\n",
+				valueTest, testFuncOut);
+	};
+	
+	printf("\n # Testing 'bool is zero ()' completed.\n\n");
 }
